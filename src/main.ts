@@ -10,6 +10,7 @@ const config: Phaser.Types.Core.GameConfig = {
   width: 960,
   height: 640,
   backgroundColor: '#0a0a0f',
+  pixelArt: true,
   scene: [BootScene, SquadCreationScene, BattleScene, CampScene, UIScene],
   parent: document.body,
   scale: {
