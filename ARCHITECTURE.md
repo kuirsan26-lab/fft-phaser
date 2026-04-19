@@ -1,117 +1,117 @@
-# FFT Phaser — Living Architecture Document
+# FFT Phaser — Живая архитектура
 
-> This document is updated continuously as the project evolves.  
-> Last updated: 2026-04-20 (campaign mode added)
-
----
-
-## Project Vision
-
-A browser-based tactical RPG inspired by **Final Fantasy Tactics**, built with **Phaser 3 + TypeScript + Vite**.  
-No external art assets — all visuals are procedurally drawn with Phaser's Graphics API.
+> Документ обновляется по мере развития проекта. Это источник правды и ориентир по приоритетам разработки.  
+> Последнее обновление: 2026-04-20 (режим кампании)
 
 ---
 
-## Current Status: **Phase 1 — Core Loop + Campaign Mode**
+## Видение проекта
 
-### ✅ Done
-- Private GitHub repo: `kuirsan26-lab/fft-phaser`
-- Phaser 3 + Vite + TypeScript scaffold
-- Isometric grid renderer (10×8 map, 4 terrain types, height levels 0-3)
-- CT-based turn manager (FFT-style charge-time system)
-- BFS pathfinding with jump/height limits
-- Combat system: melee, ranged, magic (Fire/Blizzard/Thunder), healing, AoE, stun
-- AI: moves toward enemies, chooses best ability
-- UI: action menu, turn order panel, unit info tooltip, battle log, floating damage numbers
-- 4 job classes: Warrior, Knight, Mage, Archer
-- Auto-battle toggle: button (top-right) + A key; player units use AI when active
-- **Campaign mode:** squad creation → 10 battles → victory
-  - `SquadCreationScene`: name your squad, pick 4 jobs (click to cycle)
-  - `CampScene`: roster view, HP/MP carry over, Heal All button, progress bar
-  - Permadeath: dead units free their slot permanently
-  - Enemy scaling: stat multiplier grows with battle number (×0.7 → ×1.7)
-  - Post-battle auto-navigation: victory → camp, defeat → squad creation
-
-### 🔲 Camp — not yet implemented
-- [ ] Upgrade characters (stat growth / level up)
-- [ ] Equipment slots (weapons, armor affect stats)
-- [ ] Revive fallen characters (cost resource)
-
-### 🔲 Next Steps (Phase 2)
-- [ ] Sprite sheets / pixel art assets (replace procedural circles)
-- [ ] Map selection screen with 2-3 different maps
-- [ ] Job advancement (unlock new classes)
-- [ ] Save/load via localStorage
-- [ ] Sound effects (Phaser Web Audio)
-- [ ] Camera pan/zoom for larger maps
-- [ ] More abilities per class (status effects: Slow, Haste, Sleep)
-
-### 🔲 Phase 3 (Future)
-- [ ] Story mode with cutscenes (Phaser timeline)
-- [ ] Multiplayer (WebSocket, Colyseus)
-- [ ] Map editor
+Браузерная тактическая RPG, вдохновлённая **Final Fantasy Tactics**, построенная на **Phaser 4 + TypeScript + Vite**.  
+Внешних арт-ассетов нет — вся графика рисуется процедурно через Phaser Graphics API.
 
 ---
 
-## Architecture Overview
+## Текущий статус: **Фаза 1 — Боевой цикл + Режим кампании**
+
+### ✅ Готово
+- Репозиторий: `kuirsan26-lab/fft-phaser`
+- Scaffold: Phaser 4 + Vite + TypeScript
+- Изометрический рендерер сетки (карта 10×8, 4 типа тайлов, высота 0–3)
+- Менеджер ходов на основе CT (система Charge Time, как в FFT)
+- BFS-поиск пути с учётом высоты и прыжка
+- Боевая система: ближний бой, дальний, магия (Огонь / Лёд / Гром), лечение, AoE, стан
+- ИИ: движется к врагам, выбирает лучшую способность
+- UI: меню действий, панель порядка ходов, тултип юнита, лог боя, всплывающие числа урона
+- 4 класса: Воин, Рыцарь, Маг, Лучник
+- Переключатель автобоя: кнопка (верхний правый угол) + клавиша A
+- **Режим кампании:** создание отряда → 10 битв → победа
+  - `SquadCreationScene`: имя отряда (ввод с клавиатуры), выбор 4 классов кликом
+  - `CampScene`: состав отряда, HP/MP переносятся между битвами, кнопка лечения, прогресс-бар
+  - Перманентная смерть: погибшие юниты освобождают слот навсегда
+  - Масштабирование врагов: множитель статов растёт с номером битвы (×0.7 → ×1.7)
+  - Автонавигация после боя: победа → лагерь, поражение → создание отряда
+
+### 🔲 Лагерь — не реализовано (приоритет: средний)
+- [ ] Прокачка персонажей (рост статов / уровни)
+- [ ] Слоты снаряжения (оружие, броня влияют на статы)
+- [ ] Воскрешение павших (за ресурс)
+
+### 🔲 Фаза 2 — Следующие шаги
+- [ ] Спрайты / пиксель-арт (заменить процедурные круги)
+- [ ] Экран выбора карты (2–3 разные карты)
+- [ ] Смена класса (разблокировка новых классов)
+- [ ] Сохранение / загрузка через localStorage
+- [ ] Звуковые эффекты (Phaser Web Audio)
+- [ ] Панорамирование и зум камеры для больших карт
+- [ ] Больше способностей на класс (статусы: Замедление, Ускорение, Сон)
+
+### 🔲 Фаза 3 — Далёкое будущее
+- [ ] Сюжетный режим с катсценами
+- [ ] Мультиплеер (WebSocket, Colyseus)
+- [ ] Редактор карт
+
+---
+
+## Архитектура
 
 ```
 src/
-├── main.ts               — Phaser Game config, scene registration
+├── main.ts               — конфиг Phaser, регистрация сцен
 ├── scenes/
-│   ├── BootScene.ts           — Loading screen → SquadCreationScene
-│   ├── SquadCreationScene.ts  — Pick squad name + 4 jobs, starts campaign
-│   ├── BattleScene.ts         — Core game loop; campaign-aware (accepts CampaignState)
-│   ├── CampScene.ts           — Between-battle rest: roster, heal, proceed
-│   └── UIScene.ts             — Parallel: title bar, turn info, battle-over overlay
+│   ├── BootScene.ts           — заставка → SquadCreationScene
+│   ├── SquadCreationScene.ts  — имя отряда + выбор 4 классов, запуск кампании
+│   ├── BattleScene.ts         — основной игровой цикл; поддерживает кампанию (принимает CampaignState)
+│   ├── CampScene.ts           — лагерь между битвами: ростер, лечение, продолжение
+│   └── UIScene.ts             — параллельная сцена: заголовок, ход, оверлей конца боя
 ├── systems/
-│   ├── GridSystem.ts     — Isometric rendering, tile highlighting, coordinate math
-│   ├── TurnManager.ts    — CT-based turn order, unit queue
-│   ├── Pathfinder.ts     — BFS movement, range calculation, path reconstruction
-│   └── CombatSystem.ts   — Damage formulas, ability execution, AI decision-making
+│   ├── GridSystem.ts     — изометрический рендеринг, подсветка тайлов, математика координат
+│   ├── TurnManager.ts    — очередь ходов на CT, управление юнитами
+│   ├── Pathfinder.ts     — BFS-движение, расчёт дальности, восстановление пути
+│   └── CombatSystem.ts   — формулы урона, выполнение способностей, ИИ
 ├── entities/
-│   └── Unit.ts           — Unit class: stats, HP/MP, status effects, sprite refs
+│   └── Unit.ts           — класс юнита: статы, HP/MP, эффекты статусов, ссылки на спрайты
 ├── data/
-│   ├── UnitData.ts       — Job templates, ability definitions
-│   ├── MapData.ts        — Tile height map, spawn positions
-│   └── Campaign.ts       — CampaignState types, enemy loadout per battle, stat scaling
+│   ├── UnitData.ts       — шаблоны классов, определения способностей
+│   ├── MapData.ts        — карта высот тайлов, позиции спавна
+│   └── Campaign.ts       — типы CampaignState, состав врагов по битве, масштабирование статов
 └── ui/
-    ├── ActionMenu.ts     — In-world action menu (Move / Abilities / Wait)
-    ├── TurnOrderPanel.ts — Top strip showing upcoming turns + CT bars
-    └── BattleLog.ts      — Side log + floating damage numbers
+    ├── ActionMenu.ts     — меню действий (Движение / Способности / Ожидание)
+    ├── TurnOrderPanel.ts — полоса предстоящих ходов с CT-барами
+    └── BattleLog.ts      — лог боя + всплывающие числа урона
 ```
 
 ---
 
-## Key Design Decisions
+## Ключевые архитектурные решения
 
-### CT System (Charge Time)
-Each unit has `ct` that increments by `unit.spd` per tick. When `ct >= 100` the unit acts, then `ct -= 100`. This means faster units act more frequently, matching FFT's feel.
+### CT-система (Charge Time)
+У каждого юнита `ct` растёт на `unit.spd` за тик. При `ct >= 100` юнит действует, затем `ct -= 100`. Более быстрые юниты ходят чаще — ощущение как в оригинальной FFT.
 
-### Isometric Projection
+### Изометрическая проекция
 ```
 screen_x = (col - row) * TILE_W/2   + offsetX
 screen_y = (col + row) * TILE_H/2   + offsetY  - height * TILE_DEPTH
 ```
-Tiles are drawn back-to-front sorted by `col + row` (painter's algorithm).
+Тайлы рисуются сзади вперёд, отсортированные по `col + row` (алгоритм художника).
 
-### Scene Communication
-`BattleScene` emits Phaser events (`turnStart`, `battleOver`). `UIScene` listens via `scene.get('BattleScene').events.on(...)`. This keeps UI concerns separate.
+### Коммуникация между сценами
+`BattleScene` испускает Phaser-события (`turnStart`, `battleOver`, `campaignInfo`). `UIScene` слушает их через `scene.get('BattleScene').events.on(...)`. Данные кампании передаются напрямую через `scene.start('SceneName', data)`.
 
-### AI Architecture
-Simple priority AI in `CombatSystem.aiChooseAction`:
-1. Try to use non-attack ability on in-range enemy
-2. Fall back to melee attack on weakest reachable enemy
-3. If nothing in range — move toward closest enemy
+### Архитектура ИИ
+Приоритетный ИИ в `CombatSystem.aiChooseAction`:
+1. Использовать не-атакующую способность на врага в зоне досягаемости
+2. Иначе — ближний бой по самому слабому врагу в радиусе
+3. Если никого нет в радиусе — двигаться к ближайшему врагу
 
-### Combat Formula
-- Physical: `(atk × 1.8 × multiplier) - (def × 0.5) ± 0-5 random`
-- Magical: `(mag × 2.5 × multiplier) - (mag_target × 0.3) ± 0-5 random`
-- Healing: `mag × 3 × multiplier`
+### Формулы боя
+- Физический урон: `(atk × 1.8 × множитель) - (def × 0.5) ± 0–5 случайно`
+- Магический урон: `(mag × 2.5 × множитель) - (mag_цели × 0.3) ± 0–5 случайно`
+- Лечение: `mag × 3 × множитель`
 
 ---
 
-## Running Locally
+## Запуск локально
 
 ```bash
 npm install
@@ -119,24 +119,23 @@ npm run dev    # http://localhost:5173
 npm run build  # dist/
 ```
 
-## Controls
+## Управление
 
-| Input | Action |
-|-------|--------|
-| Click unit | Select / open info |
-| Click blue tile | Move (during move phase) |
-| Click red tile | Target ability |
-| ESC | Cancel / back to menu |
-| R | Restart battle |
-| A | Toggle auto-battle (player units use AI) |
-| R | Restart battle (free battle only; disabled in campaign) |
+| Ввод | Действие |
+|------|----------|
+| Клик по юниту | Выбор / информация |
+| Клик по синему тайлу | Движение (в фазе перемещения) |
+| Клик по красному тайлу | Выбор цели способности |
+| ESC | Отмена / назад в меню |
+| R | Перезапуск боя (только в свободном режиме) |
+| A | Переключить автобой (юниты игрока управляются ИИ) |
 
 ---
 
-## Tech Stack
+## Технологии
 
-| Tool | Version | Purpose |
-|------|---------|---------|
-| Phaser | 3.x | Game engine |
-| TypeScript | 5.x | Type safety |
-| Vite | 6.x | Dev server & bundler |
+| Инструмент | Версия | Назначение |
+|------------|--------|------------|
+| Phaser | 4.x | Игровой движок |
+| TypeScript | 6.x | Типизация |
+| Vite | 8.x | Dev-сервер и сборка |
