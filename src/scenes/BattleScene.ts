@@ -11,6 +11,8 @@ import { Unit } from '../entities/Unit';
 import type { AbilityId } from '../data/UnitData';
 import { UNIT_TEMPLATES, ABILITIES } from '../data/UnitData';
 import { PLAYER_STARTS, ENEMY_STARTS } from '../data/MapData';
+import type { CampaignState } from '../data/Campaign';
+import { getEnemyLoadout, scaleTemplate } from '../data/Campaign';
 
 type Phase = 'waiting' | 'player_menu' | 'player_move' | 'player_act' | 'ai_turn' | 'game_over';
 
@@ -30,10 +32,11 @@ export class BattleScene extends Phaser.Scene {
   private infoPanel!: Phaser.GameObjects.Container;
   private autoBattle = false;
   private autoBattleBtn!: Phaser.GameObjects.Container;
+  private campaign: CampaignState | null = null;
 
   constructor() { super({ key: 'BattleScene' }); }
 
-  create(): void {
+  create(data?: { campaign?: CampaignState }): void {
     this.units = [];
     this.unitSpriteMap = new Map();
     this.unitHpBarMap = new Map();
@@ -41,6 +44,7 @@ export class BattleScene extends Phaser.Scene {
     this.selectedAbility = null;
     this.moveableCells = [];
     this.autoBattle = false;
+    this.campaign = data?.campaign ?? null;
 
     this.grid = new GridSystem(this);
     this.actionMenu = new ActionMenu(this);
@@ -55,25 +59,57 @@ export class BattleScene extends Phaser.Scene {
     this.createAutoBattleBtn();
     this.setupInput();
 
+    if (this.campaign) {
+      this.events.emit('campaignInfo', this.campaign.squadName, this.campaign.battlesCompleted + 1);
+    }
+
     this.time.delayedCall(100, () => this.nextTurn());
   }
 
   // ─── Spawning ────────────────────────────────────────────────────────────────
 
   private spawnUnits(): void {
+    if (this.campaign) {
+      this.spawnCampaignUnits();
+      this.spawnCampaignEnemies();
+    } else {
+      this.spawnDefaultUnits();
+    }
+  }
+
+  private spawnCampaignUnits(): void {
+    const alive = this.campaign!.units.filter(cu => !cu.isDead);
+    alive.forEach((cu, i) => {
+      const [row, col] = PLAYER_STARTS[i];
+      const unit = new Unit(cu.id, UNIT_TEMPLATES[cu.job], 'player', col, row);
+      unit.name = cu.name;
+      unit.hp = cu.currentHp;
+      unit.mp = cu.currentMp;
+      this.units.push(unit);
+    });
+  }
+
+  private spawnCampaignEnemies(): void {
+    const battle = this.campaign!.battlesCompleted + 1;
+    getEnemyLoadout(battle).forEach(({ job, mult }, i) => {
+      const [row, col] = ENEMY_STARTS[i];
+      const unit = new Unit(`e${i}`, scaleTemplate(UNIT_TEMPLATES[job], mult), 'enemy', col, row);
+      unit.ct = Math.floor(Math.random() * 50);
+      this.units.push(unit);
+    });
+  }
+
+  private spawnDefaultUnits(): void {
     const playerJobs: Array<keyof typeof UNIT_TEMPLATES> = ['warrior', 'mage', 'archer', 'knight'];
     const enemyJobs: Array<keyof typeof UNIT_TEMPLATES> = ['warrior', 'archer', 'mage', 'knight'];
 
     PLAYER_STARTS.forEach(([row, col], i) => {
-      const job = playerJobs[i % playerJobs.length];
-      const unit = new Unit(`p${i}`, UNIT_TEMPLATES[job], 'player', col, row);
+      const unit = new Unit(`p${i}`, UNIT_TEMPLATES[playerJobs[i % playerJobs.length]], 'player', col, row);
       this.units.push(unit);
     });
 
     ENEMY_STARTS.forEach(([row, col], i) => {
-      const job = enemyJobs[i % enemyJobs.length];
-      const unit = new Unit(`e${i}`, UNIT_TEMPLATES[job], 'enemy', col, row);
-      // Enemies start with CT stagger offset
+      const unit = new Unit(`e${i}`, UNIT_TEMPLATES[enemyJobs[i % enemyJobs.length]], 'enemy', col, row);
       unit.ct = Math.floor(Math.random() * 50);
       this.units.push(unit);
     });
@@ -252,8 +288,9 @@ export class BattleScene extends Phaser.Scene {
       }
     });
 
-    // R = restart both scenes (UIScene holds the overlay and event listeners)
+    // R = restart (free battle only; campaign navigates automatically)
     this.input.keyboard?.on('keydown-R', () => {
+      if (this.campaign) return;
       this.scene.get('UIScene').scene.restart();
       this.scene.restart();
     });
@@ -432,11 +469,34 @@ export class BattleScene extends Phaser.Scene {
     if (!playersAlive || !enemiesAlive) {
       this.phase = 'game_over';
       const winner = playersAlive ? 'player' : 'enemy';
-      this.events.emit('battleOver', winner);
+      this.events.emit('battleOver', winner, this.campaign !== null);
       this.turnOrderPanel.update(this.units, null);
+
+      if (this.campaign) {
+        this.syncCampaignState();
+        if (winner === 'player') this.campaign.battlesCompleted++;
+        this.time.delayedCall(2500, () => {
+          this.scene.stop('UIScene');
+          if (winner === 'enemy') {
+            this.scene.start('SquadCreationScene');
+          } else {
+            this.scene.start('CampScene', { campaign: this.campaign });
+          }
+        });
+      }
+
       return true;
     }
     return false;
+  }
+
+  private syncCampaignState(): void {
+    if (!this.campaign) return;
+    for (const cu of this.campaign.units) {
+      if (cu.isDead) continue;
+      const bu = this.units.find(u => u.id === cu.id && u.team === 'player');
+      if (bu) { cu.isDead = bu.isDead; cu.currentHp = bu.hp; cu.currentMp = bu.mp; }
+    }
   }
 
   // ─── Auto-battle button ───────────────────────────────────────────────────────

@@ -32,8 +32,7 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     this.time.delayedCall(900, () => {
-      this.scene.start('BattleScene');
-      this.scene.launch('UIScene');
+      this.scene.start('SquadCreationScene');
     });
   }
 }

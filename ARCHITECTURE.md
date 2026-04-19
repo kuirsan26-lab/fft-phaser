@@ -1,7 +1,7 @@
 # FFT Phaser — Living Architecture Document
 
 > This document is updated continuously as the project evolves.  
-> Last updated: 2026-04-20 (auto-battle added)
+> Last updated: 2026-04-20 (campaign mode added)
 
 ---
 
@@ -12,7 +12,7 @@ No external art assets — all visuals are procedurally drawn with Phaser's Grap
 
 ---
 
-## Current Status: **Phase 1 — Core Loop Complete**
+## Current Status: **Phase 1 — Core Loop + Campaign Mode**
 
 ### ✅ Done
 - Private GitHub repo: `kuirsan26-lab/fft-phaser`
@@ -24,13 +24,22 @@ No external art assets — all visuals are procedurally drawn with Phaser's Grap
 - AI: moves toward enemies, chooses best ability
 - UI: action menu, turn order panel, unit info tooltip, battle log, floating damage numbers
 - 4 job classes: Warrior, Knight, Mage, Archer
-- Win/loss detection + restart (R key)
 - Auto-battle toggle: button (top-right) + A key; player units use AI when active
+- **Campaign mode:** squad creation → 10 battles → victory
+  - `SquadCreationScene`: name your squad, pick 4 jobs (click to cycle)
+  - `CampScene`: roster view, HP/MP carry over, Heal All button, progress bar
+  - Permadeath: dead units free their slot permanently
+  - Enemy scaling: stat multiplier grows with battle number (×0.7 → ×1.7)
+  - Post-battle auto-navigation: victory → camp, defeat → squad creation
+
+### 🔲 Camp — not yet implemented
+- [ ] Upgrade characters (stat growth / level up)
+- [ ] Equipment slots (weapons, armor affect stats)
+- [ ] Revive fallen characters (cost resource)
 
 ### 🔲 Next Steps (Phase 2)
 - [ ] Sprite sheets / pixel art assets (replace procedural circles)
 - [ ] Map selection screen with 2-3 different maps
-- [ ] Equipment system (weapons, armor affect stats)
 - [ ] Job advancement (unlock new classes)
 - [ ] Save/load via localStorage
 - [ ] Sound effects (Phaser Web Audio)
@@ -50,9 +59,11 @@ No external art assets — all visuals are procedurally drawn with Phaser's Grap
 src/
 ├── main.ts               — Phaser Game config, scene registration
 ├── scenes/
-│   ├── BootScene.ts      — Loading screen, launches BattleScene + UIScene
-│   ├── BattleScene.ts    — Core game loop, input, orchestrates all systems
-│   └── UIScene.ts        — Parallel scene: title bar, game-over overlay
+│   ├── BootScene.ts           — Loading screen → SquadCreationScene
+│   ├── SquadCreationScene.ts  — Pick squad name + 4 jobs, starts campaign
+│   ├── BattleScene.ts         — Core game loop; campaign-aware (accepts CampaignState)
+│   ├── CampScene.ts           — Between-battle rest: roster, heal, proceed
+│   └── UIScene.ts             — Parallel: title bar, turn info, battle-over overlay
 ├── systems/
 │   ├── GridSystem.ts     — Isometric rendering, tile highlighting, coordinate math
 │   ├── TurnManager.ts    — CT-based turn order, unit queue
@@ -62,7 +73,8 @@ src/
 │   └── Unit.ts           — Unit class: stats, HP/MP, status effects, sprite refs
 ├── data/
 │   ├── UnitData.ts       — Job templates, ability definitions
-│   └── MapData.ts        — Tile height map, spawn positions
+│   ├── MapData.ts        — Tile height map, spawn positions
+│   └── Campaign.ts       — CampaignState types, enemy loadout per battle, stat scaling
 └── ui/
     ├── ActionMenu.ts     — In-world action menu (Move / Abilities / Wait)
     ├── TurnOrderPanel.ts — Top strip showing upcoming turns + CT bars
@@ -117,6 +129,7 @@ npm run build  # dist/
 | ESC | Cancel / back to menu |
 | R | Restart battle |
 | A | Toggle auto-battle (player units use AI) |
+| R | Restart battle (free battle only; disabled in campaign) |
 
 ---
 
