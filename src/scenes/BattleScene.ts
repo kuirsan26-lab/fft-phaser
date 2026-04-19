@@ -28,6 +28,8 @@ export class BattleScene extends Phaser.Scene {
   private unitSpriteMap: Map<string, Phaser.GameObjects.Container> = new Map();
   private unitHpBarMap: Map<string, Phaser.GameObjects.Graphics> = new Map();
   private infoPanel!: Phaser.GameObjects.Container;
+  private autoBattle = false;
+  private autoBattleBtn!: Phaser.GameObjects.Container;
 
   constructor() { super({ key: 'BattleScene' }); }
 
@@ -38,6 +40,7 @@ export class BattleScene extends Phaser.Scene {
     this.phase = 'waiting';
     this.selectedAbility = null;
     this.moveableCells = [];
+    this.autoBattle = false;
 
     this.grid = new GridSystem(this);
     this.actionMenu = new ActionMenu(this);
@@ -49,6 +52,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.turnManager = new TurnManager(this.units);
     this.createInfoPanel();
+    this.createAutoBattleBtn();
     this.setupInput();
 
     this.time.delayedCall(100, () => this.nextTurn());
@@ -139,7 +143,7 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
 
-    if (unit.team === 'player') {
+    if (unit.team === 'player' && !this.autoBattle) {
       this.phase = 'player_menu';
       this.actionMenu.show(unit, (action) => this.onMenuAction(action, unit));
     } else {
@@ -253,6 +257,9 @@ export class BattleScene extends Phaser.Scene {
       this.scene.get('UIScene').scene.restart();
       this.scene.restart();
     });
+
+    // A = toggle auto-battle
+    this.input.keyboard?.on('keydown-A', () => this.toggleAutoBattle());
 
     // ESC = cancel / back to menu
     this.input.keyboard?.on('keydown-ESC', () => {
@@ -430,6 +437,74 @@ export class BattleScene extends Phaser.Scene {
       return true;
     }
     return false;
+  }
+
+  // ─── Auto-battle button ───────────────────────────────────────────────────────
+
+  private createAutoBattleBtn(): void {
+    const bw = 110, bh = 28;
+    const x = this.scale.width - bw - 12;
+    const y = 28;
+
+    const bg = this.add.graphics();
+    const label = this.add.text(bw / 2, bh / 2, 'AUTO  [A]', {
+      fontSize: '12px',
+      fontFamily: 'monospace',
+      fontStyle: 'bold',
+      color: '#aabbcc',
+    }).setOrigin(0.5, 0.5);
+
+    this.autoBattleBtn = this.add.container(x, y, [bg, label]);
+    this.autoBattleBtn.setDepth(200);
+    this.autoBattleBtn.setSize(bw, bh);
+    this.autoBattleBtn.setInteractive();
+    this.autoBattleBtn.on('pointerover', () => label.setColor('#ffffff'));
+    this.autoBattleBtn.on('pointerout',  () => this.updateAutoBattleBtn());
+    this.autoBattleBtn.on('pointerdown', (_p: Phaser.Input.Pointer, _lx: number, _ly: number, event: Phaser.Types.Input.EventData) => {
+      event.stopPropagation();
+      this.toggleAutoBattle();
+    });
+
+    this.updateAutoBattleBtn();
+  }
+
+  private updateAutoBattleBtn(): void {
+    if (!this.autoBattleBtn) return;
+    const bg = this.autoBattleBtn.getAt(0) as Phaser.GameObjects.Graphics;
+    const label = this.autoBattleBtn.getAt(1) as Phaser.GameObjects.Text;
+    const bw = 110, bh = 28;
+    bg.clear();
+    if (this.autoBattle) {
+      bg.fillStyle(0x224422, 1);
+      bg.lineStyle(1, 0x44ff66, 1);
+      bg.fillRoundedRect(0, 0, bw, bh, 5);
+      bg.strokeRoundedRect(0, 0, bw, bh, 5);
+      label.setColor('#44ff66');
+    } else {
+      bg.fillStyle(0x111a22, 1);
+      bg.lineStyle(1, 0x334455, 1);
+      bg.fillRoundedRect(0, 0, bw, bh, 5);
+      bg.strokeRoundedRect(0, 0, bw, bh, 5);
+      label.setColor('#aabbcc');
+    }
+  }
+
+  private toggleAutoBattle(): void {
+    if (this.phase === 'game_over') return;
+    this.autoBattle = !this.autoBattle;
+    this.updateAutoBattleBtn();
+    this.battleLog.log(this.autoBattle ? 'Auto-battle ON' : 'Auto-battle OFF');
+
+    // If currently waiting on player input, immediately hand off to AI
+    if (this.autoBattle && this.phase === 'player_menu') {
+      const active = this.turnManager.activeUnit;
+      if (active && active.team === 'player') {
+        this.actionMenu.hide();
+        this.grid.clearHighlights();
+        this.phase = 'ai_turn';
+        this.time.delayedCall(300, () => this.runAI(active));
+      }
+    }
   }
 
   // ─── Info panel ───────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 # FFT Phaser — Living Architecture Document
 
 > This document is updated continuously as the project evolves.  
-> Last updated: 2026-04-20
+> Last updated: 2026-04-20 (auto-battle added)
 
 ---
 
@@ -25,6 +25,7 @@ No external art assets — all visuals are procedurally drawn with Phaser's Grap
 - UI: action menu, turn order panel, unit info tooltip, battle log, floating damage numbers
 - 4 job classes: Warrior, Knight, Mage, Archer
 - Win/loss detection + restart (R key)
+- Auto-battle toggle: button (top-right) + A key; player units use AI when active
 
 ### 🔲 Next Steps (Phase 2)
 - [ ] Sprite sheets / pixel art assets (replace procedural circles)
@@ -115,6 +116,7 @@ npm run build  # dist/
 | Click red tile | Target ability |
 | ESC | Cancel / back to menu |
 | R | Restart battle |
+| A | Toggle auto-battle (player units use AI) |
 
 ---
 
