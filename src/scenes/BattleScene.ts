@@ -154,8 +154,17 @@ export class BattleScene extends Phaser.Scene {
     this.unitSpriteMap.set(unit.id, container);
     this.unitHpBarMap.set(unit.id, hpBar);
 
-    container.on('pointerover', () => this.showUnitInfo(unit));
-    container.on('pointerout', () => this.hideUnitInfo());
+    container.on('pointerover', () => {
+      this.showUnitInfo(unit);
+      if (unit.team === 'enemy' && this.phase !== 'player_move' && this.phase !== 'player_act') {
+        const maxRange = Math.max(...unit.abilities.map(id => ABILITIES[id].range));
+        this.grid.showDangerZone(getCellsInRange(unit.col, unit.row, maxRange));
+      }
+    });
+    container.on('pointerout', () => {
+      this.hideUnitInfo();
+      this.grid.clearDangerZone();
+    });
     container.on('pointerdown', (_p: Phaser.Input.Pointer, _lx: number, _ly: number, event: Phaser.Types.Input.EventData) => {
       event.stopPropagation();
       this.onUnitClick(unit);

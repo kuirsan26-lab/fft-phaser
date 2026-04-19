@@ -89,6 +89,7 @@ export class GridSystem {
   private scene: Phaser.Scene;
   private tileGraphics: Map<string, Phaser.GameObjects.Graphics> = new Map();
   private overlayGraphics: Map<string, Phaser.GameObjects.Graphics> = new Map();
+  private dangerGraphics: Map<string, Phaser.GameObjects.Graphics> = new Map();
   private container: Phaser.GameObjects.Container;
 
   offsetX: number;
@@ -190,6 +191,27 @@ export class GridSystem {
   clearHighlights(): void {
     this.overlayGraphics.forEach(g => g.destroy());
     this.overlayGraphics.clear();
+  }
+
+  showDangerZone(cells: [number, number][]): void {
+    this.clearDangerZone();
+    for (const [col, row] of cells) {
+      const tile = this.getTile(col, row);
+      if (!tile) continue;
+      const { x, y } = isoToScreen(col, row, tile.height);
+      const px = x + this.offsetX;
+      const py = y + this.offsetY;
+      const gfx = this.scene.add.graphics();
+      diamond(gfx, px, py, TILE_W / 2, TILE_H / 2, 0xff6600, 0.18);
+      diamondStroke(gfx, px, py, TILE_W / 2, TILE_H / 2, 0xff8800, 0.75, 1);
+      this.container.add(gfx);
+      this.dangerGraphics.set(this.key(col, row), gfx);
+    }
+  }
+
+  clearDangerZone(): void {
+    this.dangerGraphics.forEach(g => g.destroy());
+    this.dangerGraphics.clear();
   }
 
   getUnitPosition(col: number, row: number): { x: number; y: number } {
