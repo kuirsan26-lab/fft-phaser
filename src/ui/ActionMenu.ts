@@ -62,7 +62,9 @@ export class ActionMenu {
       if (item.enabled) {
         row.on('pointerover', () => { row.clear(); row.fillStyle(0x1a2a3a, 0.95); row.fillRect(4, iy, menuW - 8, itemH - 2); });
         row.on('pointerout',  () => { row.clear(); row.fillStyle(0xffffff, 0); row.fillRect(4, iy, menuW - 8, itemH - 2); });
-        row.on('pointerdown', () => { if (item.enabled) { this.hide(); this.onSelect?.(item.action); } });
+        row.on('pointerdown', (_p: Phaser.Input.Pointer, _lx: number, _ly: number, event: Phaser.Types.Input.EventData) => {
+          if (item.enabled) { event.stopPropagation(); this.hide(); this.onSelect?.(item.action); }
+        });
       }
 
       const text = this.scene.add.text(14, iy + 8, item.label, {

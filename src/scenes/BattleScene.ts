@@ -109,7 +109,10 @@ export class BattleScene extends Phaser.Scene {
 
     container.on('pointerover', () => this.showUnitInfo(unit));
     container.on('pointerout', () => this.hideUnitInfo());
-    container.on('pointerdown', () => this.onUnitClick(unit));
+    container.on('pointerdown', (_p: Phaser.Input.Pointer, _lx: number, _ly: number, event: Phaser.Types.Input.EventData) => {
+      event.stopPropagation();
+      this.onUnitClick(unit);
+    });
   }
 
   // ─── Turn flow ────────────────────────────────────────────────────────────────
@@ -238,8 +241,9 @@ export class BattleScene extends Phaser.Scene {
       }
     });
 
-    // R = restart
+    // R = restart both scenes (UIScene holds the overlay and event listeners)
     this.input.keyboard?.on('keydown-R', () => {
+      this.scene.get('UIScene').scene.restart();
       this.scene.restart();
     });
 
