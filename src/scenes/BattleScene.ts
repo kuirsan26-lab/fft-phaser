@@ -32,6 +32,13 @@ export class BattleScene extends Phaser.Scene {
   constructor() { super({ key: 'BattleScene' }); }
 
   create(): void {
+    this.units = [];
+    this.unitSpriteMap = new Map();
+    this.unitHpBarMap = new Map();
+    this.phase = 'waiting';
+    this.selectedAbility = null;
+    this.moveableCells = [];
+
     this.grid = new GridSystem(this);
     this.actionMenu = new ActionMenu(this);
     this.turnOrderPanel = new TurnOrderPanel(this);
