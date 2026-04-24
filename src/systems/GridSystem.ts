@@ -184,7 +184,13 @@ export class GridSystem {
       const gfx = this.scene.add.graphics();
       diamond(gfx, px, py, hw, hh, color, 0.35);
       diamondStroke(gfx, px, py, hw, hh, color, 0.9, 2);
-      this.container.add(gfx);
+
+      const baseTile = this.tileGraphics.get(this.key(col, row));
+      if (baseTile) {
+        this.container.addAt(gfx, this.container.getIndex(baseTile) + 1);
+      } else {
+        this.container.add(gfx);
+      }
       this.overlayGraphics.set(this.key(col, row), gfx);
     }
   }
@@ -206,7 +212,12 @@ export class GridSystem {
       const gfx = this.scene.add.graphics();
       diamond(gfx, px, py, TILE_W / 2, TILE_H / 2, 0xff6600, 0.18);
       diamondStroke(gfx, px, py, TILE_W / 2, TILE_H / 2, 0xff8800, 0.75, 1);
-      this.container.add(gfx);
+      const baseTile = this.tileGraphics.get(this.key(col, row));
+      if (baseTile) {
+        this.container.addAt(gfx, this.container.getIndex(baseTile) + 1);
+      } else {
+        this.container.add(gfx);
+      }
       this.dangerGraphics.set(this.key(col, row), gfx);
     }
   }
