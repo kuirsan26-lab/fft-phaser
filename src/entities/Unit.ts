@@ -21,6 +21,7 @@ export class Unit {
   // Base stats
   maxHp: number;
   maxMp: number;
+  mpRegen: number;
   atk: number;
   def: number;
   mag: number;
@@ -53,6 +54,7 @@ export class Unit {
     this.row = row;
     this.maxHp = template.hp;
     this.maxMp = template.mp;
+    this.mpRegen = template.mpRegen;
     this.atk = template.atk;
     this.def = template.def;
     this.mag = template.mag;
@@ -88,6 +90,10 @@ export class Unit {
     const actual = Math.min(amount, this.maxHp - this.hp);
     this.hp += actual;
     return actual;
+  }
+
+  regenMp(): void {
+    this.mp = Math.min(this.maxMp, this.mp + this.mpRegen);
   }
 
   spendMp(amount: number): boolean {

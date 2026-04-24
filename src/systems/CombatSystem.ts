@@ -1,6 +1,7 @@
 import { Unit } from '../entities/Unit';
 import type { AbilityId } from '../data/UnitData';
 import { ABILITIES } from '../data/UnitData';
+import { MAP_DATA } from '../data/MapData';
 
 export interface CombatResult {
   damage: number;
@@ -39,7 +40,12 @@ export function executeAbility(
         ? Math.floor(actor.mag * 2.5 * def.dmgMultiplier)
         : Math.floor(actor.atk * 1.8 * def.dmgMultiplier);
       const mitigation = isMagic ? target.mag * 0.3 : target.def * 0.5;
-      const final = Math.max(1, Math.floor(raw - mitigation + (Math.random() * 6 - 3)));
+
+      const actorHeight = MAP_DATA[actor.row]?.[actor.col]?.height ?? 0;
+      const targetHeight = MAP_DATA[target.row]?.[target.col]?.height ?? 0;
+      const heightBonus = actorHeight > targetHeight ? 1.15 : 1.0;
+
+      const final = Math.max(1, Math.floor((raw - mitigation + (Math.random() * 6 - 3)) * heightBonus));
       const actual = target.takeDamage(final);
       result.damage += actual;
 

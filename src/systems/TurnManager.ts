@@ -28,6 +28,7 @@ export class TurnManager {
         next.ct -= 100;
         next.resetTurnFlags();
         next.tickStatuses();
+        next.regenMp();
         this.activeUnit = next;
         return next;
       }

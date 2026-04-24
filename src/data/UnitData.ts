@@ -5,6 +5,7 @@ export interface UnitTemplate {
   job: JobClass;
   hp: number;
   mp: number;
+  mpRegen: number;
   atk: number;
   def: number;
   mag: number;
@@ -15,7 +16,7 @@ export interface UnitTemplate {
   abilities: AbilityId[];
 }
 
-export type AbilityId = 'attack' | 'fire' | 'blizzard' | 'thunder' | 'heal' | 'shoot' | 'shield_bash' | 'provoke';
+export type AbilityId = 'attack' | 'fire' | 'blizzard' | 'thunder' | 'heal' | 'shoot' | 'rain_of_arrows' | 'shield_bash' | 'provoke';
 
 export interface AbilityDef {
   id: AbilityId;
@@ -36,32 +37,33 @@ export const ABILITIES: Record<AbilityId, AbilityDef> = {
   blizzard:    { id: 'blizzard',    name: 'Blizzard',    range: 4, aoe: 1, mpCost: 12, dmgMultiplier: 1.2, healMultiplier: 0, description: 'Ice magic, small AoE' },
   thunder:     { id: 'thunder',     name: 'Thunder',     range: 3, aoe: 0, mpCost: 10, dmgMultiplier: 1.6, healMultiplier: 0, description: 'Lightning, high damage' },
   heal:        { id: 'heal',        name: 'Heal',        range: 3, aoe: 0, mpCost: 8,  dmgMultiplier: 0,   healMultiplier: 1.2, description: 'Restore HP to ally' },
-  shoot:       { id: 'shoot',       name: 'Shoot',       range: 5, aoe: 0, mpCost: 0,  dmgMultiplier: 0.9, healMultiplier: 0, description: 'Ranged arrow attack' },
+  shoot:          { id: 'shoot',          name: 'Shoot',          range: 5, aoe: 0, mpCost: 0,  dmgMultiplier: 0.9, healMultiplier: 0, description: 'Ranged arrow attack' },
+  rain_of_arrows: { id: 'rain_of_arrows', name: 'Rain of Arrows', range: 4, aoe: 1, mpCost: 8,  dmgMultiplier: 0.7, healMultiplier: 0, description: 'Volley hits all enemies in area' },
 };
 
 export const UNIT_TEMPLATES: Record<JobClass, UnitTemplate> = {
   warrior: {
     name: 'Warrior', job: 'warrior',
-    hp: 80, mp: 20, atk: 14, def: 10, mag: 4, spd: 9, move: 4, jump: 3,
+    hp: 80, mp: 20, mpRegen: 4, atk: 14, def: 10, mag: 4, spd: 9, move: 4, jump: 3,
     color: 0x4488ff,
     abilities: ['attack', 'shield_bash'],
   },
   knight: {
     name: 'Knight', job: 'knight',
-    hp: 100, mp: 16, atk: 12, def: 14, mag: 3, spd: 7, move: 3, jump: 2,
+    hp: 100, mp: 16, mpRegen: 4, atk: 12, def: 14, mag: 3, spd: 7, move: 3, jump: 2,
     color: 0xaaaaff,
     abilities: ['attack', 'shield_bash', 'provoke'],
   },
   mage: {
     name: 'Mage', job: 'mage',
-    hp: 48, mp: 80, atk: 6, def: 5, mag: 16, spd: 8, move: 3, jump: 3,
+    hp: 48, mp: 80, mpRegen: 8, atk: 6, def: 5, mag: 16, spd: 8, move: 3, jump: 3,
     color: 0xff44aa,
     abilities: ['attack', 'fire', 'blizzard', 'thunder', 'heal'],
   },
   archer: {
     name: 'Archer', job: 'archer',
-    hp: 60, mp: 24, atk: 11, def: 7, mag: 6, spd: 10, move: 4, jump: 4,
+    hp: 60, mp: 24, mpRegen: 5, atk: 11, def: 7, mag: 6, spd: 10, move: 4, jump: 4,
     color: 0x44ff88,
-    abilities: ['attack', 'shoot'],
+    abilities: ['shoot', 'rain_of_arrows'],
   },
 };
