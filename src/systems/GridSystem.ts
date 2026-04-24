@@ -220,7 +220,7 @@ export class GridSystem {
     const { x, y } = isoToScreen(col, row, h);
     return {
       x: x + this.offsetX,
-      y: y + this.offsetY - TILE_H / 2,
+      y: y + this.offsetY + TILE_H / 2,
     };
   }
 
