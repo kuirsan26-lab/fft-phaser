@@ -7,6 +7,7 @@ export interface CombatResult {
   heal: number;
   missed: boolean;
   stunned: boolean;
+  provoked: boolean;
   ability: AbilityId;
   targets: Unit[];
 }
@@ -17,7 +18,7 @@ export function executeAbility(
   targets: Unit[],
 ): CombatResult {
   const def = ABILITIES[ability];
-  const result: CombatResult = { damage: 0, heal: 0, missed: false, stunned: false, ability, targets };
+  const result: CombatResult = { damage: 0, heal: 0, missed: false, stunned: false, provoked: false, ability, targets };
 
   if (!actor.spendMp(def.mpCost)) {
     result.missed = true;
@@ -47,6 +48,11 @@ export function executeAbility(
         result.stunned = true;
       }
     }
+
+    if (ability === 'provoke' && !target.isDead) {
+      target.addStatus({ type: 'provoked', turnsLeft: 2, sourceId: actor.id });
+      result.provoked = true;
+    }
   }
 
   return result;
@@ -58,7 +64,14 @@ export function aiChooseAction(actor: Unit, allUnits: Unit[]): {
   targets: Unit[];
   moveTo: [number, number] | null;
 } {
-  const enemies = allUnits.filter(u => u.team !== actor.team && !u.isDead);
+  let enemies = allUnits.filter(u => u.team !== actor.team && !u.isDead);
+
+  // If provoked, can only target the provoker
+  if (actor.isProvoked) {
+    const provokerId = actor.provokedBy;
+    const provoker = enemies.find(u => u.id === provokerId);
+    if (provoker) enemies = [provoker];
+  }
 
   // Find attack targets in range
   for (const abilityId of actor.abilities) {

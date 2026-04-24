@@ -4,10 +4,9 @@ import { ABILITIES } from '../data/UnitData';
 
 export type Team = 'player' | 'enemy';
 
-export interface StatusEffect {
-  type: 'stun';
-  turnsLeft: number;
-}
+export type StatusEffect =
+  | { type: 'stun'; turnsLeft: number }
+  | { type: 'provoked'; turnsLeft: number; sourceId: string };
 
 export class Unit {
   id: string;
@@ -71,6 +70,13 @@ export class Unit {
   get isDead(): boolean { return this.hp <= 0; }
 
   get isStunned(): boolean { return this.statuses.some(s => s.type === 'stun'); }
+
+  get isProvoked(): boolean { return this.statuses.some(s => s.type === 'provoked'); }
+
+  get provokedBy(): string | null {
+    const s = this.statuses.find(s => s.type === 'provoked');
+    return s?.type === 'provoked' ? s.sourceId : null;
+  }
 
   takeDamage(amount: number): number {
     const actual = Math.max(1, amount);

@@ -387,6 +387,7 @@ export class BattleScene extends Phaser.Scene {
         this.shakeSprite(target);
       }
       if (result.stunned) this.battleLog.log(`  → ${target.name} is stunned!`);
+      if (result.provoked) this.battleLog.log(`  → ${target.name} is provoked!`);
 
       target.updateHpBar();
 
