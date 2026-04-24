@@ -171,7 +171,8 @@ export class GridSystem {
     if (style === 'none') return;
 
     const color = style === 'move' ? 0x44aaff : 0xff4444;
-    for (const [col, row] of cells) {
+    const sorted = [...cells].sort((a, b) => (a[0] + a[1]) - (b[0] + b[1]));
+    for (const [col, row] of sorted) {
       const tile = this.getTile(col, row);
       if (!tile) continue;
       const { x, y } = isoToScreen(col, row, tile.height);
@@ -195,7 +196,8 @@ export class GridSystem {
 
   showDangerZone(cells: [number, number][]): void {
     this.clearDangerZone();
-    for (const [col, row] of cells) {
+    const sorted = [...cells].sort((a, b) => (a[0] + a[1]) - (b[0] + b[1]));
+    for (const [col, row] of sorted) {
       const tile = this.getTile(col, row);
       if (!tile) continue;
       const { x, y } = isoToScreen(col, row, tile.height);
