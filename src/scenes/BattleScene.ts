@@ -12,7 +12,7 @@ import type { AbilityId } from '../data/UnitData';
 import { UNIT_TEMPLATES, ABILITIES } from '../data/UnitData';
 import { PLAYER_STARTS, ENEMY_STARTS } from '../data/MapData';
 import type { CampaignState } from '../data/Campaign';
-import { getEnemyLoadout, scaleTemplate } from '../data/Campaign';
+import { getEnemyLoadout, scaleTemplate, applyLevelBonuses, grantXpAfterBattle } from '../data/Campaign';
 
 type Phase = 'waiting' | 'player_menu' | 'player_move' | 'player_act' | 'ai_turn' | 'game_over';
 
@@ -81,10 +81,12 @@ export class BattleScene extends Phaser.Scene {
     const alive = this.campaign!.units.filter(cu => !cu.isDead);
     alive.forEach((cu, i) => {
       const [row, col] = PLAYER_STARTS[i];
-      const unit = new Unit(cu.id, UNIT_TEMPLATES[cu.job], 'player', col, row);
+      const template = applyLevelBonuses(UNIT_TEMPLATES[cu.job], cu.job, cu.level);
+      const unit = new Unit(cu.id, template, 'player', col, row);
       unit.name = cu.name;
       unit.hp = cu.currentHp;
       unit.mp = cu.currentMp;
+      unit.maxHp = cu.maxHp;
       this.units.push(unit);
     });
   }
@@ -484,7 +486,11 @@ export class BattleScene extends Phaser.Scene {
 
       if (this.campaign) {
         this.syncCampaignState();
-        if (winner === 'player') this.campaign.battlesCompleted++;
+        if (winner === 'player') {
+          const battleNum = this.campaign.battlesCompleted + 1;
+          this.campaign.battlesCompleted++;
+          grantXpAfterBattle(this.campaign, battleNum);
+        }
         this.time.delayedCall(2500, () => {
           this.scene.stop('UIScene');
           if (winner === 'enemy') {

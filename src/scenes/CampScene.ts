@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import type { CampaignState } from '../data/Campaign';
+import { XP_THRESHOLDS, MAX_LEVEL } from '../data/Campaign';
 import { UNIT_TEMPLATES } from '../data/UnitData';
 
 interface CampData { campaign: CampaignState }
@@ -91,7 +92,7 @@ export class CampScene extends Phaser.Scene {
   private buildUnitCard(cu: CampaignState['units'][number], index: number, width: number): void {
     const col = index % 2;
     const row = Math.floor(index / 2);
-    const cw = 380, ch = 80;
+    const cw = 380, ch = 96;
     const x = col === 0 ? width / 2 - cw - 10 : width / 2 + 10;
     const y = 130 + row * (ch + 14);
 
@@ -116,23 +117,49 @@ export class CampScene extends Phaser.Scene {
       color: isDead ? '#553333' : '#ffffff',
     }).setOrigin(0.5);
 
-    this.add.text(x + 68, y + 14, cu.name, {
+    // Name + job
+    this.add.text(x + 68, y + 10, cu.name, {
       fontSize: '14px', fontFamily: 'monospace', fontStyle: 'bold',
       color: isDead ? '#553333' : '#ccddee',
     });
-    this.add.text(x + 68, y + 32, cu.job.toUpperCase(), {
+    this.add.text(x + 68, y + 27, cu.job.toUpperCase(), {
       fontSize: '10px', fontFamily: 'monospace', color: isDead ? '#442222' : '#445566',
     });
 
+    // Level badge
+    const levelColor = cu.levelUps > 0 ? '#ffdd44' : (isDead ? '#443333' : '#7799ee');
+    this.add.text(x + cw - 12, y + 10, `LV ${cu.level}`, {
+      fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold', color: levelColor,
+    }).setOrigin(1, 0);
+
+    if (cu.levelUps > 0) {
+      this.add.text(x + cw - 12, y + 25, `▲ LEVEL UP!`, {
+        fontSize: '9px', fontFamily: 'monospace', fontStyle: 'bold', color: '#ffdd44',
+      }).setOrigin(1, 0);
+    }
+
     if (isDead) {
-      this.add.text(x + cw / 2 + 30, y + ch / 2, 'K I A', {
+      this.add.text(x + cw / 2 + 10, y + ch / 2 + 8, 'K I A', {
         fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold', color: '#552222',
       }).setOrigin(0.5);
     } else {
-      this.drawBar(x + 68, y + 50, 260, 10, cu.currentHp, cu.maxHp, 0x44bb44, 0x113311);
-      this.drawBar(x + 68, y + 63, 260, 8,  cu.currentMp, cu.maxMp, 0x4488ff, 0x112244);
-      this.add.text(x + 68 + 264, y + 50, `${cu.currentHp}/${cu.maxHp}`, {
+      this.drawBar(x + 68, y + 46, 240, 10, cu.currentHp, cu.maxHp, 0x44bb44, 0x113311);
+      this.drawBar(x + 68, y + 60, 240, 8,  cu.currentMp, cu.maxMp, 0x4488ff, 0x112244);
+      this.add.text(x + 68 + 244, y + 46, `${cu.currentHp}/${cu.maxHp}`, {
         fontSize: '9px', fontFamily: 'monospace', color: '#336633',
+      });
+
+      // XP bar
+      const level = cu.level;
+      const atMax = level >= MAX_LEVEL;
+      const xpCur = atMax ? XP_THRESHOLDS[MAX_LEVEL] : cu.xp - XP_THRESHOLDS[level];
+      const xpNext = atMax ? 1 : XP_THRESHOLDS[level + 1] - XP_THRESHOLDS[level];
+      this.drawBar(x + 68, y + 75, 240, 6, atMax ? xpNext : xpCur, xpNext, 0xddaa22, 0x1a1400);
+      this.add.text(x + 68 + 244, y + 74, atMax ? 'MAX' : `${xpCur}/${xpNext}`, {
+        fontSize: '8px', fontFamily: 'monospace', color: '#886622',
+      });
+      this.add.text(x + 68, y + 74, 'XP', {
+        fontSize: '8px', fontFamily: 'monospace', color: '#554411',
       });
     }
   }
